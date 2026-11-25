@@ -1,21 +1,27 @@
 #include <windows.h>
 #include <stdio.h>
+#include <wchar.h>
 
-// Sets my Hook value
-HHook hHook = NULL;
+int TranslateKey(KBDLLHOOKSTRUCT *pKey, wchar_t *buffer, size_t bufferSize);
 
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HC_ACTION) {
         KBDLLHOOKSTRUCT *pKeyBoard = (KBDLLHOOKSTRUCT *)lParam;
         if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-            printf("Key Pressed: %d\n", pKeyBoard->vkCode);
+            wchar_t buffer[8] = {0};
+            int result = TranslateKey(pKeyBoard, buffer, 8);
+            if (result > 0) {
+                wprintf(L"Key Pressed: %ls\n", buffer);
+            } else {
+                printf("Key Pressed: %d\n", pKeyBoard->vkCode);
+            }
             fflush(stdout);
         }
     }
-    return CallNextHookEx(NULL, nCode, wParam, lParam);f
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-int TranslateKey(KBLLHOOKSTRUCT *pKey, wchar_t *buffer, size_t bufferSize) {
+int TranslateKey(KBDLLHOOKSTRUCT *pKey, wchar_t *buffer, size_t bufferSize) {
     // Get the current keyboard state
     BYTE keyboardState[256];
     if (!GetKeyboardState(keyboardState)) {
